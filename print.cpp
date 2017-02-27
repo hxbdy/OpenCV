@@ -10,10 +10,11 @@ int main(int argc, char* argv[]) {
 			throw("faild open file");
 		}
 
-		Point p0 = Point(mat.cols/8, mat.rows/8);
-		Point p1 = Point(mat.cols*7/8, mat.rows*7/8);
+		Point p = Point(50, mat.rows / 2 - 50);
+		putText(mat, "Hello opencv", p, FONT_HERSHEY_TRIPLEX, 0.8, Scalar(250, 200, 200), 2, CV_AA);
 
-		rectangle(mat, p0, p1, Scalar(0, 255, 0), 5, 8);
+		imshow("mat", mat);
+		imwrite("mat.jpg", mat);
 
 		waitKey(0);
 	}
