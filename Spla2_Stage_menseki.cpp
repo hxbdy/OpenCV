@@ -12,7 +12,7 @@
 using namespace cv;
 using namespace std;
 
-typedef struct Ink{
+typedef struct Ink {
 	float per;              //全体塗り面積の割合
 	float men;              //塗り総面積
 	Mat   ink;              //自陣インク色のみを反映させた画像生成
@@ -38,15 +38,15 @@ float HSV_H(int BGR[]) {
 int main(int argc, char* argv[]) {
 	try {
 
-		Ink mikata,teki;
+		Ink mikata, teki;
 		mikata.men = 0;
 		teki.men = 0;
 
-		int white = 0, cnt = 0,ink[3];
-		float min,R, G, B,H_up,H_thr;
-		Mat stage,src1,src2,dst,dst2;
+		int white = 0, cnt = 0, ink[3];
+		float min, R, G, B, H_up, H_thr;
+		Mat stage, src1, src2, dst, dst2;
 		Mat teki_ink, mikata_ink;
-		
+
 		if (argc < 2) {
 			throw "few para";
 		}
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
 
 		//シュガー理論
 		//敵インクH
-		bool flg=true;
+		bool flg = true;
 		for (int y = 0; y < dst.rows; y++) {
 			for (int x = 0; x < dst.cols; x++) {
 				ink[0] = dst.at<Vec3b>(y, x)[0];
@@ -111,7 +111,6 @@ int main(int argc, char* argv[]) {
 			}
 			if (!flg) break;
 		}
-		cout << "teki BGR=" << ink[0] << " " << ink[1] << " " << ink[2]<<"\n";
 
 		//味方インクH
 		flg = true;
@@ -157,13 +156,14 @@ int main(int argc, char* argv[]) {
 			}
 			if (!flg) break;
 		}
+		cout << "teki BGR=" << ink[0] << " " << ink[1] << " " << ink[2] << "\n";
 		cout << "teki H=" << teki.H << "\n";
-		cout << "mikata H=" << mikata.H << "\n";
 		cout << "mikata BGR=" << ink[0] << " " << ink[1] << " " << ink[2] << "\n";
+		cout << "mikata H=" << mikata.H << "\n";
 
 		//インク閾値計算
-		H_thr = (mikata.H + teki.H)/2;
-		H_up =H_thr + 180;
+		H_thr = (mikata.H + teki.H) / 2;
+		H_up = H_thr + 180;
 		cout << "H_low=" << H_thr << " " << "H_up=" << H_up << "\n";
 		if (H_thr <= teki.H && teki.H <= H_up) {
 			teki.HRange[0] = H_thr;
@@ -204,7 +204,7 @@ int main(int argc, char* argv[]) {
 								mikata_ink.at<Vec3b>(y, x)[0] = ink[0];
 								mikata_ink.at<Vec3b>(y, x)[1] = ink[1];
 								mikata_ink.at<Vec3b>(y, x)[2] = ink[2];
-								
+
 							}
 							else if (teki.HRange[0] <= HSV_H(ink) && HSV_H(ink) <= teki.HRange[1] ||
 								teki.HRange[0] <= HSV_H(ink) + 360 && HSV_H(ink) + 360 <= teki.HRange[1]) {
@@ -262,11 +262,11 @@ int main(int argc, char* argv[]) {
 		imshow("mikata_ink", mikata_ink);
 		imwrite("ink2.png", teki_ink);
 		imwrite("ink1.png", mikata_ink);
-		cout << "mikata=" << mikata.men<<"\n";
-		cout << "teki=" << teki.men <<"\n";
-		cout << "zentai=" << mikata.men + teki.men<<"\n";
+		cout << "mikata=" << mikata.men << "\n";
+		cout << "teki=" << teki.men << "\n";
+		cout << "zentai=" << mikata.men + teki.men << "\n";
 
-		cout << (mikata.men / (mikata.men + teki.men)) * 100 << "vs" << (teki.men / (mikata.men + teki.men)) * 100 << "\n";
+		cout << (mikata.men / (mikata.men + teki.men)) * 100 << "% vs " << (teki.men / (mikata.men + teki.men)) * 100 << "%\n";
 		waitKey(0);
 	}
 	catch (const char* str) {
