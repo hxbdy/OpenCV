@@ -2,12 +2,12 @@
 //ステージ全体を100%としないで、総塗り面積を100%としてるヨ
 //実行方法はターミナルで以下の通りダヨ
 //OpenCV3.0 <ステージのマスク画像> <スクショ画像>
-//Ver 1.0.0
+//Ver 1.0.2
 
 #include "common.h"
-#define GRAY_LOW 0.7 //BGR比の下範囲
 #define GRAY_UP  1.7 //BGR比の上範囲
 #define GRAY_SUM 110 //BGR総和の閾値
+#define V_THR    120 //HSVのVの閾値
 
 using namespace cv;
 using namespace std;
@@ -33,6 +33,11 @@ float HSV_H(int BGR[]) {
 	else if (max == BGR[2]) H = float(60.0 * ((BGR[1] - BGR[0]) / (max - min)));
 	if (H < 0) H += 360.0;
 	return H;
+}
+
+//BGRをHSVのVに変換する
+int HSV_V(int BGR[]) {
+	return MAX(MAX(BGR[0], BGR[1]), BGR[2]);
 }
 
 int main(int argc, char* argv[]) {
@@ -77,29 +82,32 @@ int main(int argc, char* argv[]) {
 				if (ink[0] == 0) ink[0] = 1;
 				if (ink[1] == 0) ink[1] = 1;
 				if (ink[2] == 0) ink[2] = 1;
+
+				if (HSV_V(ink) < V_THR) continue;
+
 				min = float(MIN(MIN(ink[0], ink[1]), ink[2]));
 				B = ink[0] / min;
 				G = ink[1] / min;
 				R = ink[2] / min;
 				if (ink[0] + ink[1] + ink[2] > GRAY_SUM) {
-					if (B == 1.0) {
-						if ((GRAY_LOW > G || GRAY_UP < G) || (GRAY_LOW > R || GRAY_UP < R)) {
+					if (B == 1.000) {
+						if (GRAY_UP < G || GRAY_UP < R) {
 							if (flg) {
 								teki.H = HSV_H(ink);
 								flg = false;
 							}
 						}
 					}
-					else if (G == 1.0) {
-						if ((GRAY_LOW > B || GRAY_UP < B) || (GRAY_LOW > R || GRAY_UP < R)) {
+					else if (G == 1.000) {
+						if (GRAY_UP < B || GRAY_UP < R) {
 							if (flg) {
 								teki.H = HSV_H(ink);
 								flg = false;
 							}
 						}
 					}
-					else if (R == 1.0) {
-						if ((GRAY_LOW > G || GRAY_UP < G) || (GRAY_LOW > B || GRAY_UP < B)) {
+					else if (R == 1.000) {
+						if (GRAY_UP < G || GRAY_UP < B) {
 							if (flg) {
 								teki.H = HSV_H(ink);
 								flg = false;
@@ -122,29 +130,32 @@ int main(int argc, char* argv[]) {
 				if (ink[0] == 0) ink[0] = 1;
 				if (ink[1] == 0) ink[1] = 1;
 				if (ink[2] == 0) ink[2] = 1;
+
+				if (HSV_V(ink) < V_THR) continue;
+
 				min = float(MIN(MIN(ink[0], ink[1]), ink[2]));
 				B = ink[0] / min;
 				G = ink[1] / min;
 				R = ink[2] / min;
 				if (ink[0] + ink[1] + ink[2] > GRAY_SUM) {
-					if (B == 1.0) {
-						if ((GRAY_LOW > G || GRAY_UP < G) || (GRAY_LOW > R || GRAY_UP < R)) {
+					if (B == 1.000) {
+						if (GRAY_UP < G || GRAY_UP < R) {
 							if (flg) {
 								mikata.H = HSV_H(ink);
 								flg = false;
 							}
 						}
 					}
-					else if (G == 1.0) {
-						if ((GRAY_LOW > B || GRAY_UP < B) || (GRAY_LOW > R || GRAY_UP < R)) {
+					else if (G == 1.000) {
+						if (GRAY_UP < B || GRAY_UP < R) {
 							if (flg) {
 								mikata.H = HSV_H(ink);
 								flg = false;
 							}
 						}
 					}
-					else if (R == 1.0) {
-						if ((GRAY_LOW > G || GRAY_UP < G) || (GRAY_LOW > B || GRAY_UP < B)) {
+					else if (R == 1.000) {
+						if (GRAY_UP < G || GRAY_UP < B) {
 							if (flg) {
 								mikata.H = HSV_H(ink);
 								flg = false;
@@ -191,67 +202,70 @@ int main(int argc, char* argv[]) {
 				if (ink[0] == 0) ink[0] = 1;
 				if (ink[1] == 0) ink[1] = 1;
 				if (ink[2] == 0) ink[2] = 1;
+
+				if (HSV_V(ink) < V_THR) continue;
+
 				min = float(MIN(MIN(ink[0], ink[1]), ink[2]));
 				B = ink[0] / min;
 				G = ink[1] / min;
 				R = ink[2] / min;
 				if (ink[0] + ink[1] + ink[2] > GRAY_SUM) {
-					if (B == 1.0) {
-						if ((GRAY_LOW > G || GRAY_UP < G) || (GRAY_LOW > R || GRAY_UP < R)) {
-							if (mikata.HRange[0] <= HSV_H(ink) && HSV_H(ink) <= mikata.HRange[1] ||
-								mikata.HRange[0] <= HSV_H(ink) + 360 && HSV_H(ink) + 360 <= mikata.HRange[1]) {
-								mikata.men++;
-								mikata_ink.at<Vec3b>(y, x)[0] = ink[0];
-								mikata_ink.at<Vec3b>(y, x)[1] = ink[1];
-								mikata_ink.at<Vec3b>(y, x)[2] = ink[2];
+					if (B == 1.000) {
+						if (GRAY_UP < G || GRAY_UP < R) {
+						if (mikata.HRange[0] <= HSV_H(ink) && HSV_H(ink) <= mikata.HRange[1] ||
+							mikata.HRange[0] <= HSV_H(ink) + 360 && HSV_H(ink) + 360 <= mikata.HRange[1]) {
+							mikata.men++;
+							mikata_ink.at<Vec3b>(y, x)[0] = ink[0];
+							mikata_ink.at<Vec3b>(y, x)[1] = ink[1];
+							mikata_ink.at<Vec3b>(y, x)[2] = ink[2];
 
-							}
-							else if (teki.HRange[0] <= HSV_H(ink) && HSV_H(ink) <= teki.HRange[1] ||
-								teki.HRange[0] <= HSV_H(ink) + 360 && HSV_H(ink) + 360 <= teki.HRange[1]) {
-								teki.men++;
-								teki_ink.at<Vec3b>(y, x)[0] = ink[0];
-								teki_ink.at<Vec3b>(y, x)[1] = ink[1];
-								teki_ink.at<Vec3b>(y, x)[2] = ink[2];
+						}
+						else if (teki.HRange[0] <= HSV_H(ink) && HSV_H(ink) <= teki.HRange[1] ||
+							teki.HRange[0] <= HSV_H(ink) + 360 && HSV_H(ink) + 360 <= teki.HRange[1]) {
+							teki.men++;
+							teki_ink.at<Vec3b>(y, x)[0] = ink[0];
+							teki_ink.at<Vec3b>(y, x)[1] = ink[1];
+							teki_ink.at<Vec3b>(y, x)[2] = ink[2];
 
-							}
+						}
 						}
 					}
-					else if (G == 1.0) {
-						if ((GRAY_LOW > B || GRAY_UP < B) || (GRAY_LOW > R || GRAY_UP < R)) {
-							if (mikata.HRange[0] <= HSV_H(ink) && HSV_H(ink) <= mikata.HRange[1] ||
-								mikata.HRange[0] <= HSV_H(ink) + 360 && HSV_H(ink) + 360 <= mikata.HRange[1]) {
-								mikata.men++;
-								mikata_ink.at<Vec3b>(y, x)[0] = ink[0];
-								mikata_ink.at<Vec3b>(y, x)[1] = ink[1];
-								mikata_ink.at<Vec3b>(y, x)[2] = ink[2];
-							}
-							else if (teki.HRange[0] <= HSV_H(ink) && HSV_H(ink) <= teki.HRange[1] ||
-								teki.HRange[0] <= HSV_H(ink) + 360 && HSV_H(ink) + 360 <= teki.HRange[1]) {
-								teki.men++;
-								teki_ink.at<Vec3b>(y, x)[0] = ink[0];
-								teki_ink.at<Vec3b>(y, x)[1] = ink[1];
-								teki_ink.at<Vec3b>(y, x)[2] = ink[2];
+					else if (G == 1.000) {
+						if (GRAY_UP < B || GRAY_UP < R) {
+						if (mikata.HRange[0] <= HSV_H(ink) && HSV_H(ink) <= mikata.HRange[1] ||
+							mikata.HRange[0] <= HSV_H(ink) + 360 && HSV_H(ink) + 360 <= mikata.HRange[1]) {
+							mikata.men++;
+							mikata_ink.at<Vec3b>(y, x)[0] = ink[0];
+							mikata_ink.at<Vec3b>(y, x)[1] = ink[1];
+							mikata_ink.at<Vec3b>(y, x)[2] = ink[2];
+						}
+						else if (teki.HRange[0] <= HSV_H(ink) && HSV_H(ink) <= teki.HRange[1] ||
+							teki.HRange[0] <= HSV_H(ink) + 360 && HSV_H(ink) + 360 <= teki.HRange[1]) {
+							teki.men++;
+							teki_ink.at<Vec3b>(y, x)[0] = ink[0];
+							teki_ink.at<Vec3b>(y, x)[1] = ink[1];
+							teki_ink.at<Vec3b>(y, x)[2] = ink[2];
 
-							}
+						}
 						}
 					}
-					else if (R == 1.0) {
-						if ((GRAY_LOW > G || GRAY_UP < G) || (GRAY_LOW > B || GRAY_UP < B)) {
-							if (mikata.HRange[0] <= HSV_H(ink) && HSV_H(ink) <= mikata.HRange[1] ||
-								mikata.HRange[0] <= HSV_H(ink) + 360 && HSV_H(ink) + 360 <= mikata.HRange[1]) {
-								mikata.men++;
-								mikata_ink.at<Vec3b>(y, x)[0] = ink[0];
-								mikata_ink.at<Vec3b>(y, x)[1] = ink[1];
-								mikata_ink.at<Vec3b>(y, x)[2] = ink[2];
-							}
-							else if (teki.HRange[0] <= HSV_H(ink) && HSV_H(ink) <= teki.HRange[1] ||
-								teki.HRange[0] <= HSV_H(ink) + 360 && HSV_H(ink) + 360 <= teki.HRange[1]) {
-								teki.men++;
-								teki_ink.at<Vec3b>(y, x)[0] = ink[0];
-								teki_ink.at<Vec3b>(y, x)[1] = ink[1];
-								teki_ink.at<Vec3b>(y, x)[2] = ink[2];
+					else if (R == 1.000) {
+						if (GRAY_UP < G || GRAY_UP < B) {
+						if (mikata.HRange[0] <= HSV_H(ink) && HSV_H(ink) <= mikata.HRange[1] ||
+							mikata.HRange[0] <= HSV_H(ink) + 360 && HSV_H(ink) + 360 <= mikata.HRange[1]) {
+							mikata.men++;
+							mikata_ink.at<Vec3b>(y, x)[0] = ink[0];
+							mikata_ink.at<Vec3b>(y, x)[1] = ink[1];
+							mikata_ink.at<Vec3b>(y, x)[2] = ink[2];
+						}
+						else if (teki.HRange[0] <= HSV_H(ink) && HSV_H(ink) <= teki.HRange[1] ||
+							teki.HRange[0] <= HSV_H(ink) + 360 && HSV_H(ink) + 360 <= teki.HRange[1]) {
+							teki.men++;
+							teki_ink.at<Vec3b>(y, x)[0] = ink[0];
+							teki_ink.at<Vec3b>(y, x)[1] = ink[1];
+							teki_ink.at<Vec3b>(y, x)[2] = ink[2];
 
-							}
+						}
 						}
 					}
 				}
